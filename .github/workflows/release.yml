@@ -1,14 +1,15 @@
 name: Release
 
-# Publish to npm WITH build provenance when a v* tag is pushed. The tag must match the package.json
-# version. Tests run first, so a release never ships red.
+# Publish to npm with provenance when a v* tag is pushed, authenticated via npm Trusted Publishing
+# (GitHub OIDC, no stored token). The tag must match package.json. Tests run first, so a release never
+# ships red.
 #
-# One-time setup before the first tagged release (see RELEASING.md): add an npm automation token as the
-# NPM_TOKEN repo secret. Automation tokens bypass 2FA, which CI needs because the account uses a hardware
-# security key and cannot complete the browser challenge in CI.
+# One-time setup before the first tagged release (see RELEASING.md): configure a Trusted Publisher for
+# the ai-price-index-mcp package on npmjs.com, pointing at this repo (RoninForge/ai-price-index-mcp) and
+# this workflow file (release.yml). No NPM_TOKEN secret is needed.
 #
-# Security note: this workflow uses only GitHub-provided env (GITHUB_REF_NAME) and the NPM_TOKEN secret.
-# It never interpolates untrusted event input into a run step, so there is no injection surface.
+# Security note: uses only GitHub-provided env (GITHUB_REF_NAME) and OIDC. No untrusted event input is
+# interpolated into a run step, so there is no injection surface.
 on:
   push:
     tags:
@@ -16,7 +17,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # required for the npm --provenance attestation
+  id-token: write # npm Trusted Publishing (OIDC) authentication + provenance attestation
 
 jobs:
   publish:
@@ -29,14 +30,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: npm
 
-      - name: Require NPM_TOKEN
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "$NPM_TOKEN" ]; then
-            echo "NPM_TOKEN secret is not set. Add an npm automation token before tagging a release (see RELEASING.md)."
-            exit 1
-          fi
+      # Trusted Publishing (OIDC) requires npm >= 11.5.1; node 22 bundles an older npm.
+      - run: npm install -g npm@latest
 
       - run: npm ci
       - run: npm test
@@ -51,7 +46,5 @@ jobs:
             exit 1
           fi
 
-      - name: Publish to npm with provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm (Trusted Publishing + provenance)
         run: npm publish --provenance --access public

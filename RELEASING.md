@@ -1,21 +1,26 @@
 # Releasing
 
-This package publishes to npm from CI with build provenance. Tests run on every push and pull request
-(`.github/workflows/ci.yml`); pushing a version tag publishes (`.github/workflows/release.yml`).
+This package publishes to npm from CI with build provenance via npm **Trusted Publishing** (GitHub OIDC,
+no stored token). Tests run on every push and pull request (`.github/workflows/ci.yml`); pushing a
+version tag publishes (`.github/workflows/release.yml`).
 
-## One-time setup (founder)
+## One-time setup (founder): npm Trusted Publishing
 
-A CI publish needs an npm automation token, because the account's 2FA is a hardware security key and CI
-cannot complete the browser challenge. Automation tokens are allowed to bypass 2FA.
+There is NO npm token to create, store, or rotate, and it sidesteps 2FA entirely. Configure it once on
+npm:
 
-1. On npmjs.com: Account -> Access Tokens -> Generate New Token -> **Classic Token** -> **Automation**.
-   Use the Automation type specifically: it bypasses 2FA, which CI requires. A "Publish" classic token or
-   a granular access token still demands a one-time password and fails in CI with `npm error code EOTP`.
-2. In this repo: Settings -> Secrets and variables -> Actions -> add (or update) the **`NPM_TOKEN`** secret.
+1. Open the package: https://www.npmjs.com/package/ai-price-index-mcp
+2. **Settings** -> **Trusted Publishing** -> add a **GitHub Actions** publisher with:
+   - Organization or user: `RoninForge`
+   - Repository: `ai-price-index-mcp`
+   - Workflow filename: `release.yml`
+   - Environment: leave blank
+3. Save.
 
-Alternative, no stored token: configure a **Trusted Publisher** for this package on npmjs.com pointing at
-`RoninForge/ai-price-index-mcp` and the `release.yml` workflow, then drop `NODE_AUTH_TOKEN` from the
-workflow. More secure, but needs the npm CLI on the runner at version 11.5 or newer.
+That is all. No repo secret is needed: the workflow already requests the `id-token` permission and
+upgrades npm to a version that supports OIDC publishing. (Earlier token-based publishing failed in CI
+with `npm error code EOTP` because tokens that bypass 2FA are disallowed on this account; Trusted
+Publishing avoids tokens entirely.)
 
 ## Cutting a release
 
@@ -27,10 +32,9 @@ git push origin main --follow-tags
 ```
 
 The tag push runs `release.yml`: it installs, runs the full test suite (in-memory + real-subprocess
-stdio e2e), checks the tag matches `package.json`, then runs `npm publish --provenance --access public`.
-The published version carries a provenance attestation linking it to this repo and commit.
-
-If `NPM_TOKEN` is not set, the workflow fails fast with a clear message before publishing.
+stdio e2e), checks the tag matches `package.json`, then runs `npm publish --provenance --access public`
+authenticated via OIDC. The published version carries a provenance attestation linking it to this repo
+and commit.
 
 ## Shipping newer prices
 
