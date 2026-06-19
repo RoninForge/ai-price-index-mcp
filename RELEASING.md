@@ -8,9 +8,10 @@ This package publishes to npm from CI with build provenance. Tests run on every 
 A CI publish needs an npm automation token, because the account's 2FA is a hardware security key and CI
 cannot complete the browser challenge. Automation tokens are allowed to bypass 2FA.
 
-1. On npmjs.com: Account -> Access Tokens -> Generate New Token -> **Automation** (or a Granular token
-   scoped to publish `ai-price-index-mcp`).
-2. In this repo: Settings -> Secrets and variables -> Actions -> New repository secret named **`NPM_TOKEN`**.
+1. On npmjs.com: Account -> Access Tokens -> Generate New Token -> **Classic Token** -> **Automation**.
+   Use the Automation type specifically: it bypasses 2FA, which CI requires. A "Publish" classic token or
+   a granular access token still demands a one-time password and fails in CI with `npm error code EOTP`.
+2. In this repo: Settings -> Secrets and variables -> Actions -> add (or update) the **`NPM_TOKEN`** secret.
 
 Alternative, no stored token: configure a **Trusted Publisher** for this package on npmjs.com pointing at
 `RoninForge/ai-price-index-mcp` and the `release.yml` workflow, then drop `NODE_AUTH_TOKEN` from the
