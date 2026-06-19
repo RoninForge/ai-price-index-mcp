@@ -1,0 +1,57 @@
+name: Release
+
+# Publish to npm WITH build provenance when a v* tag is pushed. The tag must match the package.json
+# version. Tests run first, so a release never ships red.
+#
+# One-time setup before the first tagged release (see RELEASING.md): add an npm automation token as the
+# NPM_TOKEN repo secret. Automation tokens bypass 2FA, which CI needs because the account uses a hardware
+# security key and cannot complete the browser challenge in CI.
+#
+# Security note: this workflow uses only GitHub-provided env (GITHUB_REF_NAME) and the NPM_TOKEN secret.
+# It never interpolates untrusted event input into a run step, so there is no injection surface.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write # required for the npm --provenance attestation
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      - name: Require NPM_TOKEN
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "NPM_TOKEN secret is not set. Add an npm automation token before tagging a release (see RELEASING.md)."
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Verify the tag matches package.json version
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          echo "package.json=$PKG_VERSION tag=$TAG_VERSION"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION. Aborting."
+            exit 1
+          fi
+
+      - name: Publish to npm with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public

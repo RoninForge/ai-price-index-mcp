@@ -1,0 +1,14 @@
+version: 2
+# Keep the ai-price-index dependency (the price data, bundled inline) and the MCP SDK fresh, and the
+# workflow actions current. Merging an ai-price-index bump and then cutting a release ships newer prices.
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

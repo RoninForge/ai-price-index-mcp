@@ -1,8 +1,13 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## Unreleased
 
-Initial build. Read-only, zero-key MCP server (stdio) wrapping the `ai-price-index` library.
+- CI publish-on-tag workflow with npm build provenance (`.github/workflows/release.yml`); see RELEASING.md.
+- Dependabot keeps the `ai-price-index` data dependency, the MCP SDK, and the workflow actions current.
+
+## 0.1.0 (2026-06-19)
+
+Initial release. Read-only, zero-key MCP server (stdio) wrapping the `ai-price-index` library.
 
 - Tools: `current_price`, `price_on`, `compare`, `cost_from_usage`, `list_models`.
 - Point-in-time price lookups with first-party source, `last_validated`, and `confidence` on every
@@ -15,4 +20,5 @@ Initial build. Read-only, zero-key MCP server (stdio) wrapping the `ai-price-ind
   over raw JSON-RPC) under `test/`; `npm test` runs both, and GitHub Actions CI runs them on Node 18,
   20, and 22.
 
-Not published. Not listed in any registry. Pending founder review.
+Published to npm as `ai-price-index-mcp@0.1.0` on 2026-06-19 (manual publish, no provenance attestation).
+Future tagged releases publish from CI with provenance. Not yet listed in any registry.
