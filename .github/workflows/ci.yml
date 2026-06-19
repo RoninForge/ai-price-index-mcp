@@ -1,0 +1,28 @@
+name: CI
+
+# Run the full test suite (in-memory MCP client/server smoke + real-subprocess stdio JSON-RPC check)
+# on every push to main and every pull request, across the supported Node range. Zero secrets needed:
+# the server is read-only, zero-key, and bundles its data via the ai-price-index dependency.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test

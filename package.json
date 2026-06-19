@@ -1,0 +1,56 @@
+{
+  "name": "ai-price-index-mcp",
+  "version": "0.1.0",
+  "description": "Read-only, zero-key MCP server for the open AI Price Index: query dated, first-party-sourced AI model API prices, including what a model cost on a past date.",
+  "license": "MIT",
+  "type": "module",
+  "author": "RoninForge (https://roninforge.org)",
+  "homepage": "https://roninforge.org/data/ai-price-index/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RoninForge/ai-price-index-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RoninForge/ai-price-index-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "llm",
+    "pricing",
+    "price",
+    "cost",
+    "tokens",
+    "openai",
+    "anthropic",
+    "claude",
+    "gpt",
+    "gemini",
+    "point-in-time",
+    "open-data"
+  ],
+  "bin": {
+    "ai-price-index-mcp": "bin/server.js"
+  },
+  "main": "./src/server.js",
+  "files": [
+    "src/",
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node bin/server.js",
+    "test": "node test/smoke.mjs && node test/stdio-check.mjs",
+    "test:smoke": "node test/smoke.mjs",
+    "test:stdio": "node test/stdio-check.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ai-price-index": "^1.0.0"
+  }
+}
