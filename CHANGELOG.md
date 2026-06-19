@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-06-19)
 
 - CI publish-on-tag workflow with npm build provenance (`.github/workflows/release.yml`); see RELEASING.md.
 - Dependabot keeps the `ai-price-index` data dependency, the MCP SDK, and the workflow actions current.
+- Dockerfile so MCP hosts (for example Glama) can build and run the stdio server for introspection.
+- LICENSE cleaned to a standard MIT file so GitHub and downstream indexers detect it.
 
 ## 0.1.0 (2026-06-19)
 
