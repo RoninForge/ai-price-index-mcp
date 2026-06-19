@@ -1,6 +1,6 @@
 {
   "name": "ai-price-index-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Read-only, zero-key MCP server for the open AI Price Index: query dated, first-party-sourced AI model API prices, including what a model cost on a past date.",
   "license": "MIT",
   "type": "module",
