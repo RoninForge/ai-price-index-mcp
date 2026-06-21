@@ -1,5 +1,7 @@
 # ai-price-index-mcp
 
+**AI model prices for when quality matters - first-party-sourced, dated, point-in-time, and human-verified.**
+
 A read-only, zero-key [Model Context Protocol](https://modelcontextprotocol.io) server that lets a
 coding agent (Claude Code, Cursor, and any other MCP client) query the open
 [AI Price Index](https://roninforge.org/data/ai-price-index/): dated, first-party-sourced AI model
