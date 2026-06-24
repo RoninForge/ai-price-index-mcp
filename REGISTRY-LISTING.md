@@ -25,6 +25,14 @@ lead with open data, point-in-time, and zero-key. No "AI" hype, no cold outreach
 - `cost_from_usage` - USD value of a token rollup at a point in time, with cache multipliers.
 - `list_models` - known model ids, optionally per provider, with aliases.
 
+## Official MCP Registry - AUTOMATED (no submission needed)
+
+The official MCP Registry (registry.modelcontextprotocol.io) is wired up: `server.json` (repo root) is
+published by `.github/workflows/publish-mcp.yml` on every `v*` tag via GitHub OIDC, under the name
+`io.github.RoninForge/ai-price-index-mcp`. No form, no token, no founder step. It goes live on the next
+tagged release; see RELEASING.md ("Official MCP Registry") for the trust model and how to re-run it.
+This is the upstream source many of the directories below ingest from, so it lands first by design.
+
 ## Submission targets (in suggested order)
 
 1. **awesome-mcp-servers** (https://github.com/punkpeye/awesome-mcp-servers) - PR adding one line under

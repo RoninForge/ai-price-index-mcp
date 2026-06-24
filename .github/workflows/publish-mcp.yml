@@ -1,0 +1,74 @@
+name: Publish to MCP Registry
+
+# Publish server.json to the official MCP Registry (registry.modelcontextprotocol.io) so the server is
+# discoverable by every MCP client and index that reads the registry. Runs on a v* tag (right after the
+# npm package is published by release.yml) and is also manually re-runnable via workflow_dispatch, so a
+# registry hiccup never forces a new npm release.
+#
+# Trust model: GitHub OIDC, no stored secret. The registry authorises the io.github.RoninForge/* namespace
+# from the workflow's OIDC claim (repository_owner = RoninForge, used verbatim, case-sensitive) and then
+# verifies package ownership by reading the `mcpName` field from the PUBLISHED npm package metadata. That
+# is why this waits for npm to expose the version before publishing, and why package.json carries
+# `"mcpName": "io.github.RoninForge/ai-price-index-mcp"`. One-time setup: none (no Trusted Publisher, no
+# token). server.json is the source of truth for the listing; its version is synced to the release here.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write # GitHub OIDC authentication to the MCP Registry
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Resolve the version to publish
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="$(node -p "require('./package.json').version")"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Publishing server.json for version $VERSION"
+
+      - name: Wait for npm to expose this version (the registry validates mcpName against it)
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "https://registry.npmjs.org/ai-price-index-mcp/$VERSION" 2>/dev/null | grep -q '"mcpName"'; then
+              echo "npm has $VERSION with mcpName"
+              exit 0
+            fi
+            echo "waiting for npm to expose $VERSION with mcpName ($i/30)..."
+            sleep 10
+          done
+          echo "npm did not expose $VERSION with mcpName within ~5 minutes"
+          exit 1
+
+      - name: Sync server.json to this version
+        run: |
+          node -e '
+            const fs = require("fs");
+            const v = process.env.VERSION;
+            const s = JSON.parse(fs.readFileSync("server.json", "utf8"));
+            s.version = v;
+            s.packages = s.packages.map((p) => ({ ...p, version: v }));
+            fs.writeFileSync("server.json", JSON.stringify(s, null, 2) + "\n");
+          '
+
+      - name: Install the MCP Registry publisher CLI
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Authenticate to the MCP Registry (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish the server to the MCP Registry
+        run: ./mcp-publisher publish

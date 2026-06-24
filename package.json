@@ -1,6 +1,7 @@
 {
   "name": "ai-price-index-mcp",
   "version": "0.1.1",
+  "mcpName": "io.github.RoninForge/ai-price-index-mcp",
   "description": "Read-only, zero-key MCP server over the AI Price Index. AI model prices for when quality matters: first-party-sourced, dated, point-in-time, and human-verified, including what a model cost on any past date.",
   "license": "MIT",
   "type": "module",

@@ -36,6 +36,30 @@ stdio e2e), checks the tag matches `package.json`, then runs `npm publish --prov
 authenticated via OIDC. The published version carries a provenance attestation linking it to this repo
 and commit.
 
+The same tag also runs `publish-mcp.yml`, which lists the server on the official MCP Registry (below).
+
+## Official MCP Registry
+
+The server is listed on the official MCP Registry (registry.modelcontextprotocol.io) under the name
+`io.github.RoninForge/ai-price-index-mcp`. `server.json` (repo root) is the source of truth for the
+listing; `publish-mcp.yml` publishes it on every `v*` tag.
+
+Trust model, like npm Trusted Publishing: **GitHub OIDC, no stored secret.** The registry authorises the
+`io.github.RoninForge/*` namespace from the workflow's OIDC claim (so the name must keep the exact org
+case, `RoninForge`), then proves package ownership by reading the `mcpName` field from the *published*
+npm package. That is why:
+
+- `package.json` carries `"mcpName": "io.github.RoninForge/ai-price-index-mcp"` (must equal the server
+  name verbatim), and
+- `publish-mcp.yml` waits for npm to expose the new version before publishing, then syncs `server.json`'s
+  version to the tag.
+
+There is no one-time setup and no secret to rotate. If the registry step ever fails after npm already
+published (a propagation delay, a registry hiccup), re-run it on its own from the Actions tab via
+**Run workflow** (`workflow_dispatch`): it reuses the version already in `package.json`, so it never
+needs a fresh npm release. To bump the listing without a code change (rare), edit `server.json` and
+re-run the workflow.
+
 ## Shipping newer prices
 
 Price data comes from the pinned `ai-price-index` dependency (bundled inline, no runtime network).
