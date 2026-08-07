@@ -1,0 +1,33 @@
+# Machine-readable citation metadata. GitHub renders a "Cite this repository" button from this file.
+cff-version: 1.2.0
+title: "RoninForge ai-price-index-mcp"
+message: "If you use this software, please cite it using the metadata in this file."
+type: software
+authors:
+  - name: "RoninForge"
+    email: "jens@rasta.online"
+    website: "https://roninforge.org"
+abstract: >-
+  RoninForge ai-price-index-mcp is a read-only Model Context Protocol server
+  that answers what an AI model's API price was on a given date, returning the
+  first-party source URL and the date that price was last validated so an agent
+  can cite the number. It serves the open AI Price Index dataset, is MIT
+  licensed, runs entirely on your machine, and requires no API keys.
+url: "https://roninforge.org/data/ai-price-index"
+repository-code: "https://github.com/RoninForge/ai-price-index-mcp"
+license: MIT
+version: v0.1.2
+date-released: 2026-06-24
+references:
+  - type: data
+    title: "AI Price Index"
+    authors:
+      - name: "RoninForge"
+    doi: "10.5281/zenodo.20730240"
+    url: "https://roninforge.org/data/ai-price-index/"
+keywords:
+  - Model Context Protocol
+  - MCP server
+  - AI model pricing
+  - point-in-time pricing
+  - zero key
