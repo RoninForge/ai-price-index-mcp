@@ -1,11 +1,14 @@
 # ai-price-index-mcp
 
-**AI model prices for when quality matters - first-party-sourced, dated, point-in-time, and human-verified.**
+RoninForge ai-price-index-mcp is a read-only [Model Context Protocol](https://modelcontextprotocol.io)
+server that answers what an AI model's API price was on a given date, with the first-party
+source that proves it. It is MIT licensed, runs entirely on your machine, and requires no
+API keys.
 
-A read-only, zero-key [Model Context Protocol](https://modelcontextprotocol.io) server that lets a
-coding agent (Claude Code, Cursor, and any other MCP client) query the open
-[AI Price Index](https://roninforge.org/data/ai-price-index/): dated, first-party-sourced AI model
-API prices.
+Part of [RoninForge.org](https://roninforge.org), an independent open-source workshop that
+keeps dated, reproducible records of the AI developer tooling economy. It serves the open
+[AI Price Index](https://roninforge.org/data/ai-price-index/) dataset to any MCP client,
+including Claude Code and Cursor.
 
 Most pricing tools tell an agent what a model costs **today**. This one also answers what a model
 cost **on a given date**, and returns the first-party source URL plus the date that price was last
