@@ -1,15 +1,19 @@
 // The read-only tool implementations, backed entirely by the ai-price-index library.
 //
 // Every function here is a pure wrapper over the published lib (current / priceOn /
-// usdForRollupRaw / resolve / models / meta). There is no pricing logic, no data layer, and no
-// network call: the lib bundles the dated dataset inline. Each result carries provenance (source URL,
-// last_validated, confidence) plus the dataset attribution so the calling agent can cite it.
+// usdForRollupRaw / usdForRequestRaw / resolve / models / meta). There is no pricing logic, no data
+// layer, and no network call: the lib bundles the dated dataset inline. Each result carries provenance
+// (source URL, last_validated, confidence) plus the dataset attribution so the calling agent can cite it.
 import {
   current,
   priceOn,
   resolve,
   models as libModels,
   usdForRollupRaw,
+  usdForRequestRaw,
+  tier2RateAt,
+  promptTokens,
+  PROMPT_TIER_THRESHOLDS,
   meta
 } from 'ai-price-index';
 
@@ -133,10 +137,11 @@ export function compare({ models, date }) {
   return { date: on ?? 'today', count: rows.length, rows, provenance: provenance() };
 }
 
-/** cost_from_usage(tokens, model, date?, provider?) - value a token rollup at a point in time, with
- *  the shared cache multipliers (cache read 0.1x, write 1.25x/2x). Resolves the model id first so short
- *  ids work, then passes the canonical provider/model to the lib's usdForRollupRaw. */
-export function costFromUsage({ model, tokens, date, provider }) {
+/** cost_from_usage(tokens, model, date?, provider?, per_request?) - value token usage at a point in
+ *  time, with the shared cache multipliers (cache read 0.1x, write 1.25x/2x). Resolves the model id
+ *  first so short ids work. Default prices a rollup at the base tier (usdForRollupRaw); per_request
+ *  prices ONE request with usdForRequestRaw, so prompt-length tiers apply. */
+export function costFromUsage({ model, tokens, date, provider, per_request }) {
   const on = date && date.length ? date : new Date().toISOString().slice(0, 10);
   if (!ISO_DATE.test(on)) {
     return { error: 'bad_date', query: model, message: `date must be YYYY-MM-DD, got "${on}"`, provenance: provenance() };
@@ -145,24 +150,41 @@ export function costFromUsage({ model, tokens, date, provider }) {
   if (!resolved.ok) return { error: 'ambiguous_model', query: model, message: resolved.error, provenance: provenance() };
   if (!resolved.value) return notFound(model, { tokens });
   const { provider: p, model: canonical } = resolved.value;
-  const { usd, modelKnown } = usdForRollupRaw(tokens ?? {}, p, canonical, on);
+  const t = tokens ?? {};
+  const { usd, modelKnown, tier2 } = per_request
+    ? usdForRequestRaw(t, p, canonical, on)
+    : usdForRollupRaw(t, p, canonical, on);
   if (!modelKnown) {
     return notFound(model, { tokens, note: `"${canonical}" has no priced interval on ${on}.` });
   }
   if (!Number.isFinite(usd)) {
     return { error: 'bad_tokens', query: model, message: 'token counts must be finite, non-negative numbers', provenance: provenance() };
   }
-  return {
+  const result = {
     query: model,
     provider: p,
     model: canonical,
     date: on,
-    tokens: tokens ?? {},
+    tokens: t,
     usd: Number(usd.toFixed(6)),
     cents: Math.round(usd * 100),
-    cache_multipliers: { read: 0.1, write_5m: 1.25, write_1h: 2 },
-    provenance: provenance()
+    cache_multipliers: { read: 0.1, write_5m: 1.25, write_1h: 2 }
   };
+  if (per_request) {
+    result.tier2 = tier2;
+  } else {
+    // A rollup over the threshold may hide tier2 requests; flag it and give the one-request value.
+    const threshold = PROMPT_TIER_THRESHOLDS[p];
+    if (threshold !== undefined && tier2RateAt(p, canonical, on) && promptTokens(t) > threshold) {
+      result.usd_if_single_request = Number(usdForRequestRaw(t, p, canonical, on).usd.toFixed(6));
+      result.note =
+        `usd is the base tier (a rollup cannot show which requests had a prompt over ${threshold} ` +
+        `tokens; those bill at the higher tier). If these tokens are one request, pass per_request: true; ` +
+        `usd_if_single_request is that value.`;
+    }
+  }
+  result.provenance = provenance();
+  return result;
 }
 
 /** list_models(provider?) - the known model ids (optionally filtered to one provider), with aliases. */

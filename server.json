@@ -3,7 +3,7 @@
   "name": "io.github.RoninForge/ai-price-index-mcp",
   "title": "AI Price Index",
   "description": "Read-only, zero-key MCP server for point-in-time AI model API prices. Open data, CC BY 4.0.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "repository": {
     "url": "https://github.com/RoninForge/ai-price-index-mcp",
     "source": "github"
@@ -14,7 +14,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "ai-price-index-mcp",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       }

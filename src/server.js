@@ -115,9 +115,11 @@ export function createServer() {
     {
       title: 'Cost from token usage',
       description:
-        'Value a token rollup in USD at a point in time, using the shared cache multipliers (cache ' +
+        'Value token usage in USD at a point in time, using the shared cache multipliers (cache ' +
         'read 0.1x input, cache write 1.25x for 5m / 2x for 1h). tokens accepts input, output, ' +
-        'cache_read, cache_write_5m, cache_write_1h. Defaults to today if no date is given.',
+        'cache_read, cache_write_5m, cache_write_1h. Defaults to today if no date is given. By default ' +
+        'tokens are a rollup priced at the base tier; set per_request when they are one API request so ' +
+        'prompt-length tiers apply.',
       inputSchema: {
         model: z.string().describe('Model id or alias to price the usage against.'),
         tokens: z
@@ -130,7 +132,15 @@ export function createServer() {
           })
           .describe('Token counts to value. All fields optional and non-negative; missing fields count as 0.'),
         date: z.string().optional().describe('Optional date (YYYY-MM-DD). Omit for today.'),
-        provider: z.string().optional().describe('Optional provider slug to disambiguate a bare id.')
+        provider: z.string().optional().describe('Optional provider slug to disambiguate a bare id.'),
+        per_request: z
+          .boolean()
+          .optional()
+          .describe(
+            'Set true when tokens are ONE API request. Prompt-length tiers then apply: for example a ' +
+            'Claude Haiku 5.5 request whose prompt (input + cache reads + cache writes) exceeds 100,000 ' +
+            'tokens bills entirely at the higher tier. The result then includes tier2: true|false.'
+          )
       }
     },
     asTool(costFromUsage)

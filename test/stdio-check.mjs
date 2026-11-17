@@ -108,7 +108,36 @@ async function main() {
     });
     assert.equal(isError, false, 'cost_from_usage should not be an error');
     assert.ok(typeof parsed.usd === 'number' && parsed.usd > 0, 'cost_from_usage missing usd');
+    assert.equal(parsed.note, undefined, 'untiered model must not carry the rollup tier note');
     console.log(`cost_from_usage 1M in + 250K out -> $${parsed.usd} (${parsed.cents}c)`);
+  }
+
+  // cost_from_usage prompt-length tier: the shared golden vectors for claude-haiku-5-5.
+  {
+    const over = { input: 60000, output: 10000, cache_read: 40000, cache_write_5m: 1000 };
+    const at = { input: 60000, output: 10000, cache_read: 40000 };
+    const base = { model: 'claude-haiku-5-5', date: '2026-10-15' };
+
+    const req = await callTool('cost_from_usage', { ...base, tokens: over, per_request: true });
+    assert.equal(req.isError, false, 'per_request haiku-5-5 should not be an error');
+    assert.equal(req.parsed.usd, 0.057625, '101k-prompt request must bill at tier2');
+    assert.equal(req.parsed.tier2, true, '101k-prompt request must report tier2: true');
+
+    const edge = await callTool('cost_from_usage', { ...base, tokens: at, per_request: true });
+    assert.equal(edge.parsed.usd, 0.0114, 'exactly-100k-prompt request stays on the base tier');
+    assert.equal(edge.parsed.tier2, false, 'exactly-100k-prompt request must report tier2: false');
+
+    const rollup = await callTool('cost_from_usage', { ...base, tokens: over });
+    assert.equal(rollup.parsed.usd, 0.011525, 'rollup must stay at the base tier');
+    assert.equal(rollup.parsed.usd_if_single_request, 0.057625, 'rollup must give the one-request value');
+    assert.equal(typeof rollup.parsed.note, 'string', 'rollup over the threshold must carry a note');
+    assert.equal(rollup.parsed.tier2, undefined, 'rollup must not claim a tier');
+
+    const small = await callTool('cost_from_usage', { ...base, tokens: at });
+    assert.equal(small.parsed.note, undefined, 'rollup at the threshold must not carry a note');
+    console.log(
+      `cost_from_usage haiku-5-5 101k prompt -> request $${req.parsed.usd}, rollup $${rollup.parsed.usd} + note`
+    );
   }
 
   // list_models: a non-empty list for a known provider.

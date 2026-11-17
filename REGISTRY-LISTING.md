@@ -22,7 +22,7 @@ lead with open data, point-in-time, and zero-key. No "AI" hype, no cold outreach
 - `current_price` - today's input/output price per million tokens for a model id, with source.
 - `price_on` - the price in effect on a YYYY-MM-DD date (the point-in-time differentiator).
 - `compare` - side-by-side prices for several models on one date.
-- `cost_from_usage` - USD value of a token rollup at a point in time, with cache multipliers.
+- `cost_from_usage` - USD value of token usage at a point in time, with cache multipliers and prompt-length tiers.
 - `list_models` - known model ids, optionally per provider, with aliases.
 
 ## Official MCP Registry - AUTOMATED (no submission needed)

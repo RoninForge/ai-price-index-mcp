@@ -65,12 +65,19 @@ Model ids resolve through the dataset's aliases, so short ids work (e.g. `claude
 | `current_price` | `model`, `provider?` | Today's input/output price for a model, with its source. |
 | `price_on` | `model`, `date` (YYYY-MM-DD), `provider?` | The price **in effect on that date** (the point-in-time lookup). |
 | `compare` | `models[]`, `date?` | Side-by-side input/output prices for several models on one date. |
-| `cost_from_usage` | `model`, `tokens`, `date?`, `provider?` | USD value of a token rollup at a point in time, with cache multipliers. |
+| `cost_from_usage` | `model`, `tokens`, `date?`, `provider?`, `per_request?` | USD value of token usage at a point in time, with cache multipliers and prompt-length tiers. |
 | `list_models` | `provider?` | Known model ids (optionally one provider), each with its aliases. |
 
 `tokens` for `cost_from_usage` accepts `input`, `output`, `cache_read`, `cache_write_5m`,
 `cache_write_1h` (all optional, missing counts as 0). Cache read is 0.1x input, cache write is 1.25x
 (5 minute) or 2x (1 hour).
+
+By default `tokens` is treated as a rollup of many requests and priced at the base tier. Set
+`per_request: true` when the tokens are one API request: prompt-length tiers then apply and the result
+carries `tier2: true|false`. For example, a Claude Haiku 5.5 request whose prompt (input + cache reads +
+cache writes) exceeds 100,000 tokens bills entirely at the higher tier (5x). A rollup on such a model
+whose prompt total exceeds the threshold keeps the base-tier `usd` and adds a `note` plus
+`usd_if_single_request`, because a rollup cannot show which requests crossed the threshold.
 
 Pass `provider` (for example `openai`, `anthropic`, `google`) to disambiguate a bare id that exists
 under more than one vendor.
