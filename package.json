@@ -52,6 +52,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "ai-price-index": "^1.0.0"
+    "ai-price-index": "^1.0.63"
   }
 }
