@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+- `cost_from_usage` takes an optional `per_request` boolean. When true the tokens are priced as one
+  request with `usdForRequestRaw`, so prompt-length tiers apply (Claude Haiku 5.5: a prompt over 100,000
+  tokens bills the whole request at the tier2 rates), and the result carries `tier2: true|false`.
+- Without `per_request`, pricing stays at the base tier. When the model has a prompt-length tier on the
+  date and the token total's prompt exceeds the threshold, the result adds a `note` and
+  `usd_if_single_request`, since a rollup cannot show which requests crossed it.
+- Requires an `ai-price-index` release that exports `usdForRequestRaw`, `tier2RateAt`, `promptTokens`,
+  and `PROMPT_TIER_THRESHOLDS`.
+
 ## 0.1.1 (2026-06-19)
 
 - CI publish-on-tag workflow with npm build provenance (`.github/workflows/release.yml`); see RELEASING.md.
